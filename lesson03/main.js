@@ -1,3 +1,5 @@
 'use strict';
 
-console.log(2 * '2');
+let myStr = '1.9.20px';
+console.log(parseFloat(myStr));
+console.log(myStr);
