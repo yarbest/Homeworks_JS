@@ -18,7 +18,15 @@ switch (date.getDay()) {
     default:
         currentDay = 'none';
 }
-console.log(currentDay);
 document.write(`<p><b>It's ${currentDay} now</b></p>`);
 
-document.write(`<b>It's ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()} now</b>`);
+let currentTime = document.createElement('div');
+currentTime.innerHTML = `<b>It's ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()} now</b>`;
+document.body.append(currentTime);
+
+setInterval(() => {
+    date = new Date();
+    currentTime.innerHTML = `<b>It's ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()} now</b>`;
+}, 1000);
+
+// document.write(`<b>It's ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()} now</b>`);
