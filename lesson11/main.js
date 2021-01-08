@@ -1,145 +1,159 @@
 'use strict';
+//Кнопки
 const calculate = document.getElementById('start');
-const incomeAdd = document.getElementsByTagName('button')[0];
-const expensesAdd = document.getElementsByTagName('button')[1];
-const depositCheckmark = document.getElementById('deposit-check');
-let values = [];
-document.querySelectorAll('[class*=-value]').forEach((item, i) => {
-    values.push(item);
-});
-values.shift();
+const incomeAdd = document.querySelector('.income_add');
+const expensesAdd = document.querySelector('.expenses_add');
+//Range
+const periodSelect = document.querySelector('.period-select');
+const periodAmount = document.querySelector('.period-amount');
 
-const monthIncome = document.querySelector('.salary-amount');
+//Месячный доход
+const monthSalary = document.querySelector('.salary-amount');
+//Дополнительные доходы
 const incomeTitle = document.querySelector('.income-title');
-const incomeAmount = document.querySelector('.income-amount');
-const additionalIncomeItem = document.querySelectorAll('.additional_income-item');
+let incomeAmount = document.querySelectorAll('.income-amount');
+//Возможный доход
+const additionalIncomeItems = document.querySelectorAll('.additional_income-item');
+
+//Обязательные расходы
 const expensestTitle = document.querySelectorAll('.expenses-title');
-const expensesAmount = document.querySelectorAll('.expenses-amount');
-const additionalExpensesItem = document.querySelectorAll('.additional_expenses-item');
+let expensesAmount = document.querySelectorAll('.expenses-amount');
+//Возможные расходы
+const additionalExpensesItem = document.querySelector('.additional_expenses-item');
+
+//checkbox
 const depositCheck = document.getElementById('deposit-check');
-const targetAmount = document.querySelectorAll('.target-amount');
-const periodSelect = document.querySelectorAll('.period-select');
+//Цель
+const targetAmount = document.querySelector('.target-amount');
 
-//Усложненное А
-const getFullTime = () => {
-    let date = new Date();
-    let dayOfMonth = date.getDate();
+//ПОСЧИТАННЫЕ----------------------------------------------------------------------------
+//Доход за месяц
+const budgetMonthValue = document.querySelector('.budget_month-value');
+//Бюджет на день(свободные деньги)
+const budgetDayValue = document.querySelector('.budget_day-value');
+//Расход за месяц
+const expensesMonthValue = document.querySelector('.expenses_month-value');
+//Возможные доходы
+const additionalIncomeValue = document.querySelector('.additional_income-value');
+//Возможные расходы
+const additionalExpensesValue = document.querySelector('.additional_expenses-value');
+//Накопления за период
+const incomePeriodValue = document.querySelector('.income_period-value');
+//Срок достижения цели в месяцах
+const targetMonthValue = document.querySelector('.target_month-value');
+//-----------------------------------------------------------------------------------------
 
-    //день недели
-    let currentDay = date.getDay();
-    switch (currentDay) {
-        case 0:
-            currentDay = 'Воскресенье';
-            break;
-        case 1:
-            currentDay = 'Понедельник';
-            break;
-        case 2:
-            currentDay = 'Вторник';
-            break;
-        case 3:
-            currentDay = 'Среда';
-            break;
-        case 4:
-            currentDay = 'Четверг';
-            break;
-        case 5:
-            currentDay = 'Пятница';
-            break;
-        case 6:
-            currentDay = 'Суббота';
-            break;
-    }
-
-    //склонение часов
-    let currentHour = date.getHours();
-    let declensionHour;
-    if ([1, 21].includes(currentHour)) {
-        declensionHour = 'час';
-    } else if ([2, 3, 4, 22, 23].includes(currentHour)) {
-        declensionHour = 'часа';
-    } else {
-        declensionHour = 'часов';
-        // [0, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-    }
-
-    //сколнение минут
-    let currentMinutes = date.getMinutes();
-    let declensionMinutes;
-    let lastSymboldOfMinutes = currentMinutes.toString()[currentMinutes.toString().length - 1];
-    if (lastSymboldOfMinutes === '1' && currentMinutes !== 11) {
-        declensionMinutes = 'минута';
-    } else if (
-        (lastSymboldOfMinutes === '2' && currentMinutes !== 12) ||
-        (lastSymboldOfMinutes === '3' && currentMinutes !== 13) ||
-        (lastSymboldOfMinutes === '4' && currentMinutes !== 14)
-    ) {
-        declensionMinutes = 'минуты';
-    } else {
-        declensionMinutes = 'минут';
-        // минут 0 5 6 7 8 9   10 11 12 13 14 15 16 17 18 19   20 25 26 27 28 29   30 35 36 37 38 39   40 45 46 47 48 49   50
-        // минута 1 21 31 41 51
-        // минуты 2 3 4  22 23 24  32 33 34  42 43 44
-    }
-
-    //сколнение секунд
-    let currentSeconds = date.getSeconds();
-    let declensionSeconds;
-    let lastSymboldOfSeconds = currentSeconds.toString()[currentSeconds.toString().length - 1];
-    if (lastSymboldOfSeconds === '1' && currentSeconds !== 11) {
-        declensionSeconds = 'секунда';
-    } else if (
-        (lastSymboldOfSeconds === '2' && currentSeconds !== 12) ||
-        (lastSymboldOfSeconds === '3' && currentSeconds !== 13) ||
-        (lastSymboldOfSeconds === '4' && currentSeconds !== 14)
-    ) {
-        declensionSeconds = 'секунды';
-    } else {
-        declensionSeconds = 'секунд';
-        // секунд 0 5 6 7 8 9   10 11 12 13 14 15 16 17 18 19   20 25 26 27 28 29   30 35 36 37 38 39   40 45 46 47 48 49   50
-        // секунда 1 21 31 41 51
-        // секунды 2 3 4  22 23 24  32 33 34  42 43 44
-    }
-
-    return `Сегодня ${currentDay}, ${dayOfMonth} февраля ${date.getFullYear()} года, ${currentHour} ${declensionHour} ${currentMinutes} ${declensionMinutes} ${currentSeconds} ${declensionSeconds}`;
+//объект со всеми данными
+let userData = {
+    totalIncome: 0,
+    dayBudget: 0,
+    totalExpenses: 0,
+    additionalIncome: [],
+    additionalExpenses: [],
+    period: 1, //количество месяцев по умолчанию
+    accumulationForPeriod: 0,
+    targetDeadline: 0,
 };
 
-let timeBlock = document.createElement('p');
-document.body.append(timeBlock);
+//Добавляем пункты дополнительного дохода
+incomeAdd.addEventListener('click', () => {
+    let newIncomeItems = incomeAdd.previousElementSibling.cloneNode(true); //копируем блок с двумя инпутами (наименование и сумма), копируемый блок стоит перед кнопкой
+    //previousElementSibling игнорирует текстовые элементы, а previousSibling может вернуть нам вместо объекта текстовый узел #text
+    incomeAdd.insertAdjacentElement('beforebegin', newIncomeItems); //перед кнопкой вставляем скопированный блок
+    for (let item of newIncomeItems.children) {
+        item.value = ''; //обнуляем значения у скопированных полей
+    }
+});
 
-setInterval(function () {
-    timeBlock.innerHTML = getFullTime();
-}, 1000);
+//Добавляем пункты обязательных расходов
+expensesAdd.addEventListener('click', () => {
+    let newExpensesItems = expensesAdd.previousElementSibling.cloneNode(true);
+    expensesAdd.insertAdjacentElement('beforebegin', newExpensesItems);
+    for (let item of newExpensesItems.children) {
+        item.value = '';
+    }
+});
 
-//Усложненное Б
-const getShortTime = () => {
-    //3 '3' ['3'] ['0', '3'] 03
-    const addZero = (number) => {
-        let withZero = number.toString().length === 1 ? '0' + number : number;
-        return withZero;
-    };
-    let date = new Date();
-    let dayOfMonth = date.getDate();
-    dayOfMonth = addZero(dayOfMonth);
+//Получаем значение range и меняем значение цифры
+periodSelect.addEventListener('input', () => {
+    userData.period = periodSelect.value;
+    periodAmount.textContent = userData.period;
+});
 
-    let month = date.getMonth() + 1;
-    month = addZero(month);
-
-    let year = date.getFullYear();
-    let hours = date.getHours();
-    hours = addZero(hours);
-
-    let minutes = date.getMinutes();
-    minutes = addZero(minutes);
-
-    let seconds = date.getSeconds();
-    seconds = addZero(seconds);
-
-    return `${dayOfMonth}.${month}.${year} - ${hours}:${minutes}:${seconds}`;
+//ФУНКЦИИ РАСЧЕТОВ___________________________________________________________________________
+const getTotalIncome = () => {
+    incomeAmount = document.querySelectorAll('.income-amount');
+    //каждый раз пересобираем коллекцию с доходами, так как пользователь мог добавить новый пункт
+    userData.totalIncome = 0; //кажды раз обнуляем, так как после каждого расчета, к старому значению суммируется новое
+    incomeAmount.forEach((item) => {
+        userData.totalIncome += +item.value; //значения внутри value хранятся в виде строки, поэтому их нудно перевести в число
+        //добавляем в общий доход значения из дополнительных доходов
+    });
+    userData.totalIncome += +monthSalary.value;
+    //добавляем в общий доход значение из ЗП
+    budgetMonthValue.value = userData.totalIncome; //показываем на экране общий доход
 };
 
-let timeBlockShort = document.createElement('p');
-document.body.append(timeBlockShort);
-setInterval(function () {
-    timeBlockShort.innerHTML = getShortTime();
-}, 1000);
+const getTotalExpenses = () => {
+    expensesAmount = document.querySelectorAll('.expenses-amount');
+    //каждый раз пересобираем коллекцию с расходами, так как пользователь мог добавить новый пункт
+    userData.totalExpenses = 0; //кажды раз обнуляем, так как после каждого расчета, к старому значению суммируется новое
+    expensesAmount.forEach((item) => {
+        userData.totalExpenses += +item.value;
+    });
+    expensesMonthValue.value = userData.totalExpenses;
+};
+
+const getDayBudget = () => {
+    userData.dayBudget = Math.floor((userData.totalIncome - userData.totalExpenses) / 30);
+    budgetDayValue.value = userData.dayBudget;
+};
+
+const getAdditionalIncome = () => {
+    userData.additionalIncome = [];
+    //кажды раз обнуляем, так как после каждого расчета, к старому значению добавляется новое
+    additionalIncomeItems.forEach((item) => {
+        userData.additionalIncome.push(item.value.trim());
+    });
+    additionalIncomeValue.value = userData.additionalIncome.join(', ');
+};
+
+const getAdditionalExpenses = () => {
+    userData.additionalExpenses = [];
+    //кажды раз обнуляем, так как после каждого расчета, к старому значению добавляется новое
+    let tempList = additionalExpensesItem.value.split(', '); //тут храми массив из введенных значений
+    tempList.forEach((item, i, arr) => {
+        // item = item.replace(item[0], item[0].toUpperCase()); //каждое слово делаем с большой буквы
+        userData.additionalExpenses.push(item); //и это слово кладем в массив нашего объекта
+    });
+    additionalExpensesValue.value = userData.additionalExpenses.join(', '); //выводим на экран
+};
+
+const getIncomePeriodValue = () => {
+    incomePeriodValue.value = (userData.totalIncome - userData.totalExpenses) * userData.period;
+    //считаем, сколько заработаем за указанный период
+    periodSelect.addEventListener('input', () => {
+        //После нажатии кнопки Рассчитать, при изменения range будет динамически изменяться поле 'Накопления за период'
+        incomePeriodValue.value = (userData.totalIncome - userData.totalExpenses) * userData.period;
+    });
+};
+
+const getTargetMonthValue = () => {
+    userData.targetDeadline = Math.ceil(targetAmount.value / (userData.totalIncome - userData.totalExpenses));
+    targetMonthValue.value = userData.targetDeadline;
+};
+//___________________________________________________________________________
+
+//Производим расчет
+calculate.addEventListener('click', () => {
+    getTotalIncome();
+
+    getTotalExpenses();
+    getDayBudget();
+
+    getAdditionalIncome();
+    getAdditionalExpenses();
+
+    getIncomePeriodValue();
+    getTargetMonthValue();
+});
