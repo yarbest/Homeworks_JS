@@ -1,0 +1,52 @@
+body {
+    font-family: 'Arial';
+}
+.enter-task-block {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: rgb(159, 159, 236);
+    padding: 20px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+.enter-task {
+    flex-basis: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    background-color: rgb(146, 237, 253);
+}
+.btn-add-task {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-left: -30px;
+    padding: 19px;
+    border-radius: 50%;
+    background-color: blue;
+}
+.btn-add-task::before,
+.btn-add-task::after {
+    content: '';
+    position: absolute;
+    left: 46%;
+    top: 7px;
+    background-color: #fff;
+    border-radius: 5px;
+    width: 4px;
+    height: 60%;
+}
+.btn-add-task::after {
+    transform: rotate(90deg);
+}
+
+.unfinished-tasks-block {
+    border: 1px solid #000;
+    padding: 10px;
+    margin-bottom: 30px;
+}
+.finished-tasks-block {
+    border: 1px solid #000;
+    padding: 10px;
+}
