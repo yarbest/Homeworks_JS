@@ -1,16 +1,40 @@
 'use strict';
+//Шаблон дела
+const task = document.createElement('div');
+task.classList.add('task');
+task.insertAdjacentHTML(
+    'beforeend',
+    `<span class="task-text"></span>
+    <button class="btn-del-task"><b>Delete</b></button>
+    <button class="btn-mark-task"><b>Mark</b></button>`
+);
 const inputEnterTask = document.querySelector('.enter-task');
-
 const taskBlocks = document.querySelector('.task-blocks');
 const unfinishedTasksBlock = document.querySelector('.unfinished-tasks-block');
 const finishedTasksBlock = document.querySelector('.finished-tasks-block');
-
 const btnAddTask = document.querySelector('.btn-add-task');
 const btnDelTask = document.querySelector('.btn-del-task');
 const btnMarkTask = document.querySelector('.btn-mark-task');
 
 let tasks = document.querySelectorAll('.task');
 
+let unfinishedTasks; //массив с пунктами не выполненных дел
+let listWithTaskText = []; //массив с текстовым содержанием не выполненных дел
+
+//=====================================================================================
+//Выводим пункты из localStorage если они есть
+listWithTaskText = JSON.parse(localStorage.getItem('unfinishedTasks'));
+if (listWithTaskText) {
+    //если тут что-то есть
+    listWithTaskText.forEach((item) => {
+        const newTaskFromStorage = task.cloneNode(true);
+        newTaskFromStorage.querySelector('.task-text').textContent = item;
+        unfinishedTasksBlock.append(newTaskFromStorage);
+    });
+}
+//=====================================================================================
+
+//проверка блоков на пустоту
 const checkIfBlocksEmpty = () => {
     //Если дела еще не добавлены, то нужено добавить текст заглушку
     if (unfinishedTasksBlock.children.length === 0) {
@@ -32,22 +56,6 @@ const checkIfBlocksEmpty = () => {
 };
 checkIfBlocksEmpty(); //изначально у нас блоки без пунктов, поэтому нужно им добавить текст, что дел еще нет
 
-//Шаблон дела
-const task = document.createElement('div');
-task.classList.add('task');
-task.insertAdjacentHTML(
-    'beforeend',
-    `<span class="task-text"></span>
-    <button class="btn-del-task">Del</button>
-    <button class="btn-mark-task">Mark</button>`
-);
-
-//=====================================================================================
-
-//
-
-//=====================================================================================
-
 btnAddTask.addEventListener('click', () => {
     if (inputEnterTask.value === '') {
         return;
@@ -60,14 +68,15 @@ btnAddTask.addEventListener('click', () => {
     unfinishedTasksBlock.append(newTask);
     checkIfBlocksEmpty();
 
-    let unfinishedTasks = document.querySelectorAll('.task:not([class ~= marked])');
-    unfinishedTasks = [...unfinishedTasks].map((item) => {
-        return item;
+    //============================================
+    //кладем в localStorage текст из наших дел
+    unfinishedTasks = document.querySelectorAll('.task:not([class ~= marked])');
+    listWithTaskText = [];
+    //собираем текстовое содержание не отмеченных дел в новый массив, и кладем его в хранилище
+    unfinishedTasks.forEach((item) => {
+        listWithTaskText.push(item.querySelector('.task-text').textContent);
     });
-    console.log(unfinishedTasks);
-    localStorage.setItem('unfinishedTasks', JSON.stringify(unfinishedTasks));
-    unfinishedTasks = JSON.parse(localStorage.getItem('unfinishedTasks'));
-    console.log(unfinishedTasks);
+    localStorage.setItem('unfinishedTasks', JSON.stringify(listWithTaskText));
 });
 
 taskBlocks.addEventListener('click', (event) => {
@@ -76,8 +85,19 @@ taskBlocks.addEventListener('click', (event) => {
 
     if (myTarget.classList.contains('btn-del-task')) {
         myTargetClosest.remove();
+        //============================================
+        //удаляем из localStorage текстовое содержание дела, которые удалили
+        listWithTaskText.forEach((item, i, arr) => {
+            if (item === myTargetClosest.querySelector('.task-text').textContent) {
+                arr.splice(arr.indexOf(item), 1);
+            }
+        });
+        console.log(listWithTaskText);
+        localStorage.setItem('unfinishedTasks', JSON.stringify(listWithTaskText));
+        //============================================
         checkIfBlocksEmpty();
     }
+
     if (myTarget.classList.contains('btn-mark-task') && myTargetClosest.classList.contains('marked') === false) {
         //если у пункта еще нету класса "Отмечено", то этот пункт нужно Отметить и положить в выполненные дела
         myTargetClosest.classList.add('marked');
@@ -91,3 +111,6 @@ taskBlocks.addEventListener('click', (event) => {
     }
     // localStorage.setItem('unfinished-tasks', unfinishedTasks);
 });
+
+// localStorage.setItem('unfinishedTasks', JSON.stringify(unfinishedTasks));
+// unfinishedTasks = JSON.parse(localStorage.getItem('unfinishedTasks'));

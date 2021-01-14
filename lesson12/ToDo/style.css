@@ -50,3 +50,30 @@ body {
     border: 1px solid #000;
     padding: 10px;
 }
+
+.btn-del-task,
+.btn-mark-task {
+    padding: 15px 5px;
+    border-radius: 50%;
+}
+.btn-del-task {
+    margin-left: auto;
+    border: 1px solid red;
+}
+.btn-mark-task {
+    border: 1px solid green;
+}
+.btn-del-task b,
+.btn-mark-task b {
+    pointer-events: none;
+}
+
+.task {
+    display: flex;
+    align-items: center;
+    border: 1px solid rgba(0, 0, 255, 0.493);
+    margin: 5px 0;
+}
+.marked {
+    background-color: rgba(36, 250, 8, 0.644);
+}
