@@ -66,9 +66,11 @@ const removeTaskFromStorage = (task) => {
 };
 
 //менянем состояние выполноненности задания в хранилище
+//к сожалению, если у нас 2 одинаковые текстовые записи, то маркировка может поменяться только у первого, так как findIndex
+//возвращает первое совпадение
 const changeTaskStatus = (task) => {
     let indexOfChangedObject = taskData.findIndex((item) => {
-        //в item лежит обхект с инфой о задании
+        //в item лежит объект с инфой о задании
         if (item.action === task.querySelector('.task-text').textContent) {
             //находим в массиве объект, у которого текстовое значение = равно текстовому значению дела, которое хотим изменить
             return true;
