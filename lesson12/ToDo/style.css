@@ -57,7 +57,6 @@ body {
     border-radius: 50%;
 }
 .btn-del-task {
-    margin-left: auto;
     border: 1px solid red;
 }
 .btn-mark-task {
@@ -71,9 +70,24 @@ body {
 .task {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     border: 1px solid rgba(0, 0, 255, 0.493);
     margin: 5px 0;
 }
+
+.task-text {
+    margin-right: 30px;
+}
+
 .marked {
     background-color: rgba(36, 250, 8, 0.644);
+}
+
+.time {
+    margin-left: auto;
+    margin-right: 15px;
+}
+
+.time-marked {
+    margin-right: 15px;
 }

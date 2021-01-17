@@ -5,6 +5,7 @@ taskTemplate.classList.add('task');
 taskTemplate.insertAdjacentHTML(
     'beforeend',
     `<span class="task-text"></span>
+    <span class='time'>Добавлено: <time></time></span>
     <button class="btn-del-task"><b>Delete</b></button>
     <button class="btn-mark-task"><b>Mark</b></button>`
 );
@@ -18,25 +19,48 @@ const btnMarkTask = document.querySelector('.btn-mark-task');
 
 let tasks = document.querySelectorAll('.task');
 
+const getCurrentDateTime = () => {
+    let date = new Date();
+    return `${date.getDate().toString().length === 1 ? '0' + date.getDate() : date.getDate()}.${
+        date.getMonth().toString().length === 1 ? '' + date.getMonth() + 1 : date.getMonth()
+    }.${date.getFullYear().toString().length === 1 ? '0' + date.getFullYear() : date.getFullYear()}; ${
+        date.getHours().toString().length === 1 ? '0' + date.getHours() : date.getHours()
+    }:${date.getMinutes().toString().length === 1 ? '0' + date.getMinutes() : date.getMinutes()}:${
+        date.getSeconds().toString().length === 1 ? '0' + date.getSeconds() : date.getSeconds()
+    }`;
+};
+
 //Получаем инфу о заданиях из хранилища при запуске страницы
 let taskData = []; //Массив, в котором хранятся задания в виде объектов
-taskData = JSON.parse(localStorage.getItem('taskData'));
-if (taskData) {
-    //если массив не пустой
-    taskData.forEach((item) => {
-        //в item лежит объект, в котором текст задания и его статус
-        const taskFromStorage = taskTemplate.cloneNode(true); //создаем html-объкт с заданием из хранилища
-        taskFromStorage.querySelector('.task-text').textContent = item.action; //меняем текст задания исходя из текста, который находится в свойстве объекта
-        if (item.marked === true) {
-            //если в хранилище у объкта значение свойства marked === true, то значит это дело было отмечено и его нужно положить
-            //в блок с выполненными заданиями
-            taskFromStorage.classList.add('marked');
-            finishedTasksBlock.append(taskFromStorage);
-        } else {
-            unfinishedTasksBlock.append(taskFromStorage); //иначе в невыполненные
-        }
-    });
-}
+const getTasksFromStorage = () => {
+    unfinishedTasksBlock.innerHTML = '';
+    finishedTasksBlock.innerHTML = '';
+
+    taskData = JSON.parse(localStorage.getItem('taskData'));
+    if (taskData) {
+        //если массив не пустой
+        taskData.forEach((item) => {
+            //в item лежит объект, в котором текст задания и его статус
+            const taskFromStorage = taskTemplate.cloneNode(true); //создаем html-объкт с заданием из хранилища
+            taskFromStorage.querySelector('.task-text').textContent = item.action; //меняем текст задания исходя из текста, который находится в свойстве объекта
+            taskFromStorage.querySelector('time').textContent = item.addedDate;
+            if (item.marked === true) {
+                //если в хранилище у объкта значение свойства marked === true, то значит это дело было отмечено и его нужно положить
+                //в блок с выполненными заданиями
+                taskFromStorage.classList.add('marked');
+                finishedTasksBlock.append(taskFromStorage);
+                if (item.markedDate !== '') {
+                    document
+                        .querySelector('.time')
+                        .insertAdjacentHTML('afterend', `<span class='time-marked'>Выполнено: <time>${item.markedDate}</time></span>`);
+                }
+            } else {
+                unfinishedTasksBlock.append(taskFromStorage); //иначе в невыполненные
+            }
+        });
+    }
+};
+getTasksFromStorage();
 
 //кладем в localStorage инфу о нашем деле
 const setTaskToStorage = (task) => {
@@ -47,6 +71,8 @@ const setTaskToStorage = (task) => {
     taskData.push({
         action: task.querySelector('.task-text').textContent,
         marked: task.classList.contains('marked') ? true : false, //если пункт отмечен, то в свойство объекта marked записывается true
+        addedDate: task.querySelector('time').textContent,
+        markedDate: '',
     });
     localStorage.setItem('taskData', JSON.stringify(taskData)); //перезаписываем хранилище
 };
@@ -67,12 +93,18 @@ const removeTaskFromStorage = (task) => {
 
 //менянем состояние выполноненности задания в хранилище
 //к сожалению, если у нас 2 одинаковые текстовые записи, то маркировка может поменяться только у первого, так как findIndex
-//возвращает первое совпадение
+//возвращает первое совпадение,
+//значит будем сравнивать по ДАТЕ, вплоть до Секунд, врядли же добавят 2 одинаковые записи в ту же Секунд
 const changeTaskStatus = (task) => {
     let indexOfChangedObject = taskData.findIndex((item) => {
         //в item лежит объект с инфой о задании
-        if (item.action === task.querySelector('.task-text').textContent) {
+        if (item.addedDate === task.querySelector('time').textContent) {
             //находим в массиве объект, у которого текстовое значение = равно текстовому значению дела, которое хотим изменить
+            if (item.markedDate === '' || task.classList.contains('marked')) {
+                item.markedDate = getCurrentDateTime();
+                // task.querySelector('.time-marked').textContent = item.markedDate;
+            }
+
             return true;
         }
     });
@@ -82,6 +114,7 @@ const changeTaskStatus = (task) => {
     } else {
         taskData[indexOfChangedObject].marked = false;
     }
+    //
     //перезаписываем хранилище
     localStorage.setItem('taskData', JSON.stringify(taskData));
 };
@@ -114,9 +147,10 @@ const addNewTask = () => {
     }
     const newTask = taskTemplate.cloneNode(true);
     newTask.querySelector('.task-text').textContent = inputEnterTask.value;
+    newTask.querySelector('time').textContent = getCurrentDateTime();
     inputEnterTask.value = '';
-    unfinishedTasksBlock.append(newTask);
     setTaskToStorage(newTask);
+    getTasksFromStorage();
     //изначально у нас блоки пустые, и в них добавляется текст заглушка, но если мы добавляем пункт, то заглушку нужно убрать
     checkIfBlocksEmpty();
 };
@@ -146,6 +180,7 @@ taskBlocks.addEventListener('click', (event) => {
         myTargetClosest.classList.add('marked');
         finishedTasksBlock.append(myTargetClosest);
         changeTaskStatus(myTargetClosest);
+        getTasksFromStorage();
 
         checkIfBlocksEmpty();
     } else if (myTarget.classList.contains('btn-mark-task') && myTargetClosest.classList.contains('marked') === true) {
@@ -153,6 +188,7 @@ taskBlocks.addEventListener('click', (event) => {
         myTargetClosest.classList.remove('marked');
         unfinishedTasksBlock.append(myTargetClosest);
         changeTaskStatus(myTargetClosest);
+        getTasksFromStorage();
 
         checkIfBlocksEmpty();
     }
