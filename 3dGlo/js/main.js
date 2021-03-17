@@ -428,7 +428,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     //send-ajax-form
     (function () {
-        const errorMessage = 'Ошибка';
+        const errorMessage = 'Этот сервер не поддерживает отправку данных';
         const loadMessage = 'Загрузка...';
         const succesMessage = 'С вами скоро свяжутся';
 
