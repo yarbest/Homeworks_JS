@@ -426,93 +426,86 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     })(100);
 
+    const validate = (statusField, { nameInput, phoneInput, emailInput }) => {
+        let flag;
+        statusField.innerHTML = '';
+        nameInput.removeAttribute('style'); //каждый раз убираем красную обводку у неправильных инпутов
+        phoneInput.removeAttribute('style');
+        emailInput.removeAttribute('style');
+
+        const showError = (text, ...fields) => {
+            statusField.insertAdjacentHTML('beforeend', `${text}<br/>`);
+            statusField.style.cssText =
+                'margin-top: 20px; color: red; display: inline-flex; align-items: center; justify-content: center; padding: 10px 30px; background-color: #ffffffd9; margin-left: auto; margin-right: auto; border-radius: 10px;';
+            fields.forEach((input) => (input.style.backgroundColor = 'rgb(246 198 198)'));
+            flag = false;
+        };
+
+        if (nameInput.value.trim().length === 0) showError(`Введите имя`, nameInput);
+        if (phoneInput.value.trim().length === 0) showError(`Введите номер телефона`, phoneInput);
+        if (emailInput.value.trim().length === 0) showError(`Введите почту`, emailInput);
+
+        if (/\d|[^а-яё\s]/gi.test(nameInput.value)) showError(`Имя должно состоять только из кириллицы`, nameInput);
+
+        if (
+            !/^((\+38)|(38))?[(-\s]?\d\d\d[)-\s]?[-\s]?\d\d\d[-\s]?\d\d[-\s]?\d\d$/gi.test(phoneInput.value) &&
+            phoneInput.value.length !== 0
+        ) {
+            showError(`Номер телефона должен быть в правильном формате`, phoneInput);
+        }
+
+        if (!/(\w+\.?)+@(\w+\.?)+\w{2,}/gi.test(emailInput.value) && emailInput.value.length !== 0) {
+            showError(`Не правильный формат почты`, emailInput);
+        }
+        if (flag === false) return false;
+        else return true;
+    };
+
+    const postData = (event, form, data, statusField) => {
+        fetch(event.target.action, {
+            method: form.method,
+            body: data,
+            headers: {
+                Accept: 'application/json',
+            },
+        })
+            .then((response) => {
+                if (!response.ok) throw new Error(response.status);
+                statusField.style.color = 'green';
+                statusField.innerHTML = 'Спасибо за заявку, с Вами скоро свяжутся';
+                form.reset();
+            })
+            .catch((error) => {
+                statusField.style.color = 'red';
+                statusField.innerHTML = 'Упс! Произошла ошибка при отправке';
+            });
+    };
+
     //send-ajax-form
     (function () {
-        const errorMessage = 'Этот сервер не поддерживает отправку данных';
-        const loadMessage = 'Загрузка...';
-        const succesMessage = 'С вами скоро свяжутся';
-
         const forms = document.querySelectorAll('form');
 
-        const statusMessage = document.createElement('div');
-        statusMessage.style.cssText = 'font-size: 2rem; color: white;';
+        const statusField = document.createElement('div');
+        statusField.classList.add('status-field');
 
         forms.forEach((form) => {
             form.addEventListener('submit', (event) => {
                 event.preventDefault();
-
-                // if (/[a-z]/gi.test(form.querySelector('.form-email').value) === true) {
-                //     alert('Имя должно состоять только из кириллицы');
-                //     return;
-                // }
-                if (/(\w+\.?)+@(\w+\.?)+\w{2,}/g.test(form.querySelector('.form-email').value) === false) {
-                    alert('Не правильный формат почты');
+                form.append(statusField);
+                if (!validate(statusField, { nameInput: form[0], emailInput: form[1], phoneInput: form[2] })) {
                     return;
                 }
-                if (/\+38\(\d\d\d\)\d\d\d-\d\d-\d\d/g.test(form.querySelector('.form-phone').value) === false) {
-                    alert('Не правильные данные телефона');
-                    return;
-                }
-                console.log(form.querySelector('.form-phone').value);
-
-                form.append(statusMessage);
-                statusMessage.textContent = loadMessage;
 
                 const formData = new FormData(form); //у элементов формы есть атрибуты name и value
                 //и вот внутри formdata эти данные хранятся в таком виде, [ ["name1", "value1"], ["user_phone", "09998887766"] ]
                 //но чтобы их увидеть, нужно написать следующее: [...formData.entries()]
-                form.reset(); //очищаем поля
-                let body = {};
+                let data = {};
                 for (let val of formData.entries()) {
-                    body[val[0]] = val[1]; //перегоняем данные из formData в объект, чтобы потом его передать в виде JSON
+                    data[val[0]] = val[1]; //перегоняем данные из formData в объект, чтобы потом его передать в виде JSON
                 }
 
-                postData(
-                    body,
-                    () => {
-                        statusMessage.textContent = succesMessage;
-                    },
-                    (error) => {
-                        statusMessage.textContent = errorMessage;
-                        console.error(error);
-                    }
-                );
+                postData(event, form, JSON.stringify(data), statusField);
             });
         });
-
-        const postData = (body, outputData, errorData) => {
-            const request = new XMLHttpRequest();
-
-            request.addEventListener('readystatechange', () => {
-                //событие readystatechange происходит, когда меняется значение readyState
-                if (request.readyState !== 4) return; //если readyState === 4, то сообщение дошло
-                if (request.status === 200) {
-                    // status === 200 показывает, что все прошло без ошибок
-                    outputData();
-                } else {
-                    errorData(request.status);
-                }
-            });
-
-            request.open('POST', '/server.php');
-            //если захотим передавать данные не через JSON, а через formData, то вместо application/json нужно написать multipart/form-data, это зависит от сервера
-            request.setRequestHeader('Content-Type', 'application/json');
-
-            request.send(JSON.stringify(body));
-        };
-
-        // const formNames = document.querySelectorAll('.form-name');
-        // formNames.forEach((inputName) => {
-        //     inputName.addEventListener('input', () => {
-        //         inputName.value = inputName.value.replace(/[^а-яё]/gi, '');
-        //     });
-        // });
-
-        // const formEmails = document.querySelectorAll('.form-email');
-        // formEmails.forEach((inputEmail) => {
-        //     inputEmail.addEventListener('input', () => {
-        //         inputEmail.value = inputEmail.value.replace(/[^(\w+\.?)+@(\w+\.?)+\w{2,}]/gi, '');
-        //     });
-        // });
     })();
 });
