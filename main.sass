@@ -1,9 +1,76 @@
 @import '_reset.scss'
+@import '_scroll.scss'
 
+
+
+
+body
+    font-family: "Arial"
+
+.select-film
+    position: absolute
+    z-index: 100
+    left: 0
+    top: 0
+    width: 100%
+    max-width: 500px
+    display: flex
+    flex-direction: column
+    overflow: hidden
+    transition: height 0.5s
+    background: linear-gradient(0deg, #02002450 0%, rgba(255,255,255,1) 15%)
+    background-color: #fff
+    cursor: pointer
+
+    @media (max-width: 480px)
+        position: fixed
+    
+    li
+        padding: 10px 20px
+        border-bottom: 1px solid lightgray
+        &:first-child
+            position: relative
+            &::after
+                content: ''
+                display: block
+                position: absolute
+                right: 10px
+                top: 50% 
+                transform: translateY(-50%)                
+                width: 0
+                height: 0
+                border: 10px solid transparent
+                border-top-color: black
+                border-bottom: 0
+                transition: transform 0.5s
+    &_opened    
+        overflow: auto
+        height: 200px !important
+
+        li:first-child
+            &::after
+                transform: translateY(-50%) rotate(-180deg)
+
+        @media (max-width: 480px)
+            height: 100vh !important
+.heroes 
+    border: 1px solid transparent
+    &__list
+        display: grid
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))
+        gap: 20px 40px
+        @media (max-width: 575px)
+            gap: 20px
+    &__title
+        font-size: 30px
+        font-weight: 700
+        margin: 10px 0
 .hero
     &__image-wrap
-        width: 25%
+        height: 450px
     &__image
         width: 100%
         height: 100%
-        object-fit: contain//
+        object-fit: cover
+    &__detail
+        margin: 5px
